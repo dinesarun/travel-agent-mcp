@@ -4,7 +4,7 @@ import os
 
 # 1. Initialize the Server
 mcp = FastMCP("Expedia-Prototype")
-DB_FILE = "bookings.json"
+DB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "bookings.json")
 
 # Helper to ensure DB exists
 if not os.path.exists(DB_FILE):
