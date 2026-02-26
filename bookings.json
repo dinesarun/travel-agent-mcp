@@ -1,1 +1,7 @@
-[]
+[
+  {
+    "hotel": "Taj",
+    "city": "Chennai",
+    "nights": 3
+  }
+]

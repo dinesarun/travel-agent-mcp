@@ -39,13 +39,55 @@ The MCP server starts and listens for tool calls from a connected client.
 | `create_booking` | Registers a new hotel booking | `hotel_name: str`, `city: str`, `nights: int` |
 | `list_bookings` | Retrieves all current bookings | _(none)_ |
 
-## How FastMCP Works
+## How It Works
 
-FastMCP turns plain Python functions into MCP tools instantly — no boilerplate, no protocol wiring needed. Your AI client calls them like remote functions over a standard JSON-RPC transport.
+### FastMCP
+FastMCP turns plain Python functions into MCP tools instantly — no boilerplate, no protocol wiring needed. It runs **entirely on your local machine** and does not require internet access.
 
-## How the MCP Server Extracts Keywords
+### Keyword Extraction & Natural Language Parsing
+FastMCP itself does **not** parse natural language. Here is the full flow:
 
-When you say *"Book me a room at Marriott in Paris for 3 nights"*, Claude (the client) reads your sentence and pulls out the key values — `hotel_name`, `city`, `nights` — then calls the matching tool with those extracted arguments automatically.
+```
+"Book me a room at Marriott in Paris for 3 nights"
+        ↓
+  Claude Desktop (LLM)
+  - Reads your tool definitions (tool name + param names + docstrings)
+  - Understands natural language using its built-in LLM capabilities
+  - Extracts: hotel_name="Marriott", city="Paris", nights=3
+        ↓
+  JSON-RPC call to your local server.py
+  { "tool": "create_booking", "arguments": { "hotel_name": "Marriott", "city": "Paris", "nights": 3 } }
+        ↓
+  FastMCP (server.py) receives the structured call
+  - Matches tool name → create_booking()
+  - Passes extracted params to your Python function
+        ↓
+  bookings.json (saved locally)
+```
+
+### How Claude Knows What to Extract
+Claude reads your **function signature and docstring** from `server.py`:
+
+```python
+@mcp.tool()
+def create_booking(hotel_name: str, city: str, nights: int):
+    """Create a hotel booking"""
+```
+
+- **Param names** (`hotel_name`, `city`, `nights`) tell Claude what values to look for
+- **Types** (`str`, `int`) tell Claude what format to send
+- **Docstrings** help Claude understand when to call which tool
+
+> Internet is only needed for the **Claude LLM API** — FastMCP itself runs fully offline.
+
+### Component Summary
+
+| Component | Runs where | Needs internet? |
+|---|---|---|
+| Claude Desktop (AI client) | Local app | Yes (Anthropic API) |
+| FastMCP server (`server.py`) | Local Python process | No |
+| NLP / keyword extraction | Done by Claude (LLM) | Yes (Claude API) |
+| Tool execution | Local FastMCP | No |
 
 ## Connecting to Claude Desktop
 
