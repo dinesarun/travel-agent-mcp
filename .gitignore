@@ -13,6 +13,9 @@ env/
 # Runtime data
 bookings.json
 
+# Claude Code
+.claude/
+
 # VS Code
 .vscode/
 
