@@ -6,7 +6,7 @@ A lightweight hotel booking MCP (Model Context Protocol) server built with [Fast
 
 - **Create booking** – register a hotel stay (name, city, nights)
 - **List bookings** – retrieve all saved bookings
-- Bookings are persisted locally in `bookings.json`
+- Bookings are persisted locally in `bookings.json` (gitignored — not committed to version control)
 
 ## Requirements
 
@@ -15,6 +15,8 @@ A lightweight hotel booking MCP (Model Context Protocol) server built with [Fast
 
 ## Setup
 
+### Option A: pip + venv
+
 ```bash
 # Create and activate a virtual environment
 python -m venv .venv
@@ -22,6 +24,18 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install fastmcp
+```
+
+### Option B: uv (recommended)
+
+```bash
+# Install uv if you haven't already
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create venv and install
+uv venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+uv pip install fastmcp
 ```
 
 ## Running the server
@@ -34,15 +48,17 @@ The MCP server starts and listens for tool calls from a connected client.
 
 ## Tools
 
-| Tool | Description | Parameters |
-|---|---|---|
-| `create_booking` | Registers a new hotel booking | `hotel_name: str`, `city: str`, `nights: int` |
-| `list_bookings` | Retrieves all current bookings | _(none)_ |
+| Tool | Description | Parameters | Returns |
+|---|---|---|---|
+| `create_booking` | Registers a new hotel booking | `hotel_name: str`, `city: str`, `nights: int` | Confirmation string |
+| `list_bookings` | Retrieves all current bookings | _(none)_ | JSON array of bookings |
 
 ## How It Works
 
 ### FastMCP
 FastMCP turns plain Python functions into MCP tools instantly — no boilerplate, no protocol wiring needed. It runs **entirely on your local machine** and does not require internet access.
+
+The server is registered under the name **`Expedia-Prototype`** (defined in `server.py` as `FastMCP("Expedia-Prototype")`). This is the name MCP clients will see when they connect.
 
 ### Keyword Extraction & Natural Language Parsing
 FastMCP itself does **not** parse natural language. Here is the full flow:
@@ -70,8 +86,8 @@ Claude reads your **function signature and docstring** from `server.py`:
 
 ```python
 @mcp.tool()
-def create_booking(hotel_name: str, city: str, nights: int):
-    """Create a hotel booking"""
+def create_booking(hotel_name: str, city: str, nights: int) -> str:
+    """Registers a new hotel booking. Use this when a user wants to book a stay."""
 ```
 
 - **Param names** (`hotel_name`, `city`, `nights`) tell Claude what values to look for
@@ -155,9 +171,29 @@ Claude will automatically call `create_booking` or `list_bookings` and return th
 ```
 travel-agent-mcp/
 ├── server.py        # FastMCP server with booking tools
-├── bookings.json    # Local booking database (auto-created)
+├── bookings.json    # Local booking database (auto-created, gitignored)
+├── .gitignore       # Excludes venv, __pycache__, bookings.json, etc.
 └── README.md
 ```
+
+> `bookings.json` is excluded from git (see `.gitignore`). Each environment maintains its own local bookings file.
+
+## Troubleshooting
+
+**Tools don't appear in Claude Desktop**
+- Make sure the Python path in `claude_desktop_config.json` points to the `.venv` interpreter, not a system Python
+- Confirm `fastmcp` is installed in that venv: `/path/to/.venv/bin/python -c "import fastmcp; print(fastmcp.__version__)"`
+- Check **Settings → Developer → MCP Servers** in Claude Desktop for error details
+- Fully quit and reopen Claude Desktop after editing the config
+
+**`ModuleNotFoundError: No module named 'fastmcp'`**
+- Your config is pointing to the wrong Python. Re-run `which python` inside your activated venv and update the config
+
+**`bookings.json` keeps resetting**
+- This is expected — `bookings.json` is gitignored and local to your machine. It is auto-created on first run if it doesn't exist
+
+**Server starts but Claude doesn't call the tools**
+- Check that the docstrings in `server.py` clearly describe when each tool should be used — Claude relies on them for tool selection
 
 ## License
 
