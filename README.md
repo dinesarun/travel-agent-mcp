@@ -166,6 +166,15 @@ Show me all my current hotel bookings.
 
 Claude will automatically call `create_booking` or `list_bookings` and return the result.
 
+### 🧪 Experimental: Backstage Integration
+I have extended this MCP server to act as a DevEx Assistant for companies like Spotify or Expedia's internal platform (Backstage).
+
+get_backstage_catalog: Real-time discovery of microservices using the Backstage REST API.
+
+register_new_service: Automated "Golden Path" onboarding by generating and committing YAML definitions directly to the catalog.
+
+Why this matters for companies like Spotify or Expedia: It transforms the Developer Portal from a passive dashboard into an active, conversational participant in the engineering lifecycle.
+
 ## Project Structure
 
 ```
